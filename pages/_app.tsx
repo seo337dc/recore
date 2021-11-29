@@ -1,12 +1,16 @@
 import type { AppProps } from "next/app";
-import GlobalStyles from "../styles/GlobalStyles";
+import { StylesProvider } from "@material-ui/core";
 import storeWrapper from "../store/storeWrapper";
+import GlobalStyles from "../styles/GlobalStyles";
+
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
   return (
     <>
       <GlobalStyles />
-      <Component {...pageProps} />
+      <StylesProvider injectFirst>
+        <Component {...pageProps} />
+      </StylesProvider>
     </>
   );
 };
