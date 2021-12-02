@@ -1,7 +1,7 @@
 import type { AppProps } from 'next/app';
 import { StylesProvider } from '@material-ui/core';
-import storeWrapper from '../store/storeWrapper';
 import GlobalStyles from '../styles/GlobalStyles';
+import { wrapper } from '../store';
 
 
 const MyApp = ({ Component, pageProps }: AppProps) => {
@@ -15,5 +15,6 @@ const MyApp = ({ Component, pageProps }: AppProps) => {
   );
 };
 
-export default storeWrapper.withRedux(MyApp);
+export default wrapper.withRedux(MyApp);
+
 

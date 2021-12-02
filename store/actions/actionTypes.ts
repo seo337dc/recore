@@ -1,0 +1,5 @@
+export const INSERT_INFO = 'INSERT_INFO';
+
+export const UPDATE_BOOKMARK = 'UPDATE_BOOKMARK';
+
+export const UPDATE_ARTICLE = 'UPDATE_ARTICLE';
