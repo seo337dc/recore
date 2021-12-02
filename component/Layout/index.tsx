@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Cookies } from 'react-cookie';
 import styled from 'styled-components';
 import Login from '../Login/Login';
+import BookMark from '../BookMark/BookMark';
+import { RootState } from '../../store/reducer';
+import { insertInfo } from '../../store/actions/info';
 
 
 interface Props {
@@ -10,15 +15,31 @@ interface Props {
 
 const Layout = ({ children, onClick }: Props) => {
   const [search, setSearch] = useState('');
+  const cookies = new Cookies();
+
+  const dispatch = useDispatch();
+  const { token } = useSelector((state: RootState) => state.infoReducer);
+
   const onHandleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
+  };
+
+  const onHandleClickLogout = () => {
+    cookies.set('token', '');
+    dispatch(insertInfo(''));
   };
 
   return (
     <>
       <Nav>
-        <input value={search} onChange={onHandleInput} />
-        <i className='bx bx-search' onClick={() => onClick(search)} />
+        <NavContent />
+        <NavContent>
+          <input value={search} onChange={onHandleInput} />
+          <i className='bx bx-search' onClick={() => onClick(search)} />
+        </NavContent>
+        <NavContent>
+          {token && <i className='bx bx-log-out' onClick={onHandleClickLogout} />}
+        </NavContent>
       </Nav>
       <Wrap>
         <Container>
@@ -26,7 +47,7 @@ const Layout = ({ children, onClick }: Props) => {
             {children}
           </ArticleWrap>
           <LeftNavWrap>
-            <Login />
+            {token ? <BookMark /> : <Login />}
           </LeftNavWrap>
         </Container>
 
@@ -40,21 +61,28 @@ const Nav = styled.div`
   width: 100%;
   height: 50px;
   position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   top: 0;
   left: 0;
   right: 0;
+  background-color: #000000;
+`;
+
+const NavContent = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background-color: #000000;
+
 
   input {
-    width: 20%;
+    width: 100%;
     min-height: 30px;
     border-radius: 10px;
     color: #000000;
-    font-size: 15px;
+    font-size: 20px;
 
     &:focus {
       outline: none;
@@ -62,9 +90,10 @@ const Nav = styled.div`
   }
 
   i {
-    font-size: 25px;
+    font-size: 30px;
     color: #fec0bd;
     cursor: pointer;
+    margin-right: 20px;
   }
 `;
 
@@ -93,7 +122,6 @@ const LeftNavWrap = styled.div`
   right: 0;
   top: calc(50px + 10%);
   z-index: 1;
-  //border: 1px solid black;
 `;
 
 export default Layout;
