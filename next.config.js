@@ -1,5 +1,5 @@
-const withBundleAnalyzer = require("@next/bundle-analyzer")({
-  enabled: process.env.ANALYZE === "true",
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
 });
 
 module.exports = withBundleAnalyzer({
@@ -8,7 +8,7 @@ module.exports = withBundleAnalyzer({
   compress: true,
   webpack(config, options) {
     if (!options.dev) {
-      config.devtool = options.isServer ? false : "hidden-source-map";
+      config.devtool = options.isServer ? false : 'hidden-source-map';
     }
 
     return config;
