@@ -1,34 +1,36 @@
-import { useState } from 'react';
-import styled from 'styled-components';
+import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { Cookies } from 'react-cookie';
 import axios from 'axios';
+import styled from 'styled-components';
 import * as MaterialCore from '@material-ui/core';
 import Layout from '../component/Layout';
+import { RootState } from '../store/reducer';
+import { insertInfo, updateBookMark } from '../store/actions/info';
+import { updateArticle } from '../store/actions/article';
 
-//
-// author: "Meredith Dietz"
-// content: "Its no surprise that after a year of unprecedented (remember that word?) isolation, there was a significant surge in users seeking out remote therapy and mental health apps. In terms of increasing me… [+8644 chars]"
-// description: "It’s no surprise that after a year of unprecedented (remember that word?) isolation, there was a significant surge in users seeking out remote therapy and mental health apps. In terms of increasing mental health awareness and decreasing mental health stigma, …"
-// publishedAt: "2021-11-02T19:00:00Z"
-// source: {id: null, name: 'Lifehacker.com'}
-// title: "Do Therapy Apps Really Protect Your Privacy?"
-// url: "https://lifehacker.com/do-therapy-apps-really-protect-your-privacy-1847983029"
-// urlToImage: "https://i.kinja-img.com/gawker-media/image/upload/c_fill,
 interface articleInfo {
   author: string;
   content: string;
   description: string;
   publishedAt: string;
-// source: {id: null, name: 'Lifehacker.com'}
+  source: { id: null, name: string };
   title: string;
   url: string;
   urlToImage: string;
+  isBookmark?: boolean;
 }
 
 const Home = () => {
   const materialUITheme = MaterialCore.unstable_createMuiStrictModeTheme();
-  const [articles, setArticles] = useState<articleInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const cookies = new Cookies();
+  const dispatch = useDispatch();
 
+  const { token } = useSelector((state: RootState) => state.infoReducer);
+  const { bookmark } = useSelector((state: RootState) => state.bookmarkReducer);
+  const articles = useSelector((state: RootState) => state.articlesReducer);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const onClickSearch = async (search: string) => {
     if (!search) {
@@ -41,7 +43,13 @@ const Home = () => {
       setIsLoading(true);
       const res = await axios.get(`https://newsapi.org/v2/everything?apiKey=f0314630b1d64516bc522a83c6c5b6c0&q=${search}`);
       if (res.status === 200) {
-        setArticles(res.data.articles);
+        dispatch(updateArticle(res.data.articles.map((articleInfo: articleInfo) => {
+          if (bookmark.find((data) => data.url === articleInfo.url)) {
+            return { ...articleInfo, isBookmark: true };
+          } else {
+            return { ...articleInfo, isBookmark: false };
+          }
+        })));
       }
     } catch (e) {
       console.error(e);
@@ -50,13 +58,48 @@ const Home = () => {
     }
   };
 
-  const imgCheck = (urlToImage: string): string => {
-    if (!urlToImage || urlToImage.indexOf('.html') - 1 > 0) {
-      return '/image/no-image.svg';
+  const onClickBookMark = (info: articleInfo) => {
+
+    const newArticleList = articles.map((articleInfo) => {
+      if (articleInfo.url === info.url) {
+        return { ...articleInfo, isBookmark: !articleInfo.isBookmark };
+      } else {
+        return { ...articleInfo };
+      }
+    });
+
+
+    if (info.isBookmark) {
+      const reduxBookMarkList = newArticleList.filter((data) => data.isBookmark).map((data) => ({
+        title: data.title,
+        url: data.url,
+        urlToImage: data.urlToImage,
+      }));
+      dispatch(updateBookMark(reduxBookMarkList));
+      cookies.set('bookmark', reduxBookMarkList);
+    } else {
+      const newObj = { title: info.title, url: info.url, urlToImage: info.urlToImage };
+      dispatch(updateBookMark(bookmark.concat(newObj)));
+      cookies.set('bookmark', bookmark.concat(newObj));
+    }
+
+    dispatch(updateArticle(newArticleList));
+  };
+
+  const imgCheckFunc = (urlToImage: string): string => {
+    if (!urlToImage || urlToImage.indexOf('.html') > -1) {
+      return '/images/no-image.svg';
     } else {
       return urlToImage;
     }
   };
+
+  useEffect(() => {
+    const token = cookies.get('token') || '';
+    const bookMarkList = cookies.get('bookmark');
+    if (bookMarkList) dispatch(updateBookMark(bookMarkList));
+    dispatch(insertInfo(token));
+  }, [cookies.get('token')]);
 
   return (
     <MaterialCore.ThemeProvider theme={materialUITheme}>
@@ -67,33 +110,42 @@ const Home = () => {
               <MaterialCore.CircularProgress />
             </LoadingWrap>
           )}
-          {articles.length ?
-            articles.map((data, index) => (
-              <CardWrap key={`articleInfo_${index}`}>
-                <CardContainer>
-                  <CardLeft>
-                    <img src={imgCheck(data.urlToImage)} alt={data.url} />
-                  </CardLeft>
-                  <CardRight>
-                    <TitleWrap>{data.title}</TitleWrap>
-                    <ContentWrap><p>{data.description}</p></ContentWrap>
-                    <EctWrap>
+          {!articles.length && <NoneDataWrap>No Data</NoneDataWrap>}
+          {articles.length &&
+          articles.map((data, index) => (
+            <CardWrap key={`articleInfo_${index}`}>
+              <CardContainer>
+                <CardLeft>
+                  <img src={imgCheckFunc(data.urlToImage)} alt={data.url} />
+                </CardLeft>
+                <CardRight>
+                  <TitleWrap>
+                    <span>{data.title}</span>
+                    {token && <i className={`bx ${!data.isBookmark ? 'bx' : 'bxs'}-bookmark`}
+                                 onClick={() => onClickBookMark(data)} />}
+                  </TitleWrap>
+                  <ContentWrap><p>{data.description}</p></ContentWrap>
+                  <EctWrap>
+                    {data.author && (
                       <AuthorWrap>
                         <i className='bx bx-user' />
                         <span>{data.author}</span>
                       </AuthorWrap>
-                      <span>|</span>
-                      <PublishedAtWrap>
-                        <i className='bx bx-time' />
-                        <span>{data.publishedAt.slice(0, 10)}</span>
-                      </PublishedAtWrap>
-                    </EctWrap>
-                  </CardRight>
-                </CardContainer>
-              </CardWrap>),
-            ) :
-            <NoneDataWrap>No Data</NoneDataWrap>
-          }
+                    )}
+                    {data.author && <span>|</span>}
+                    <PublishedAtWrap>
+                      <i className='bx bx-time' />
+                      <span>{data.publishedAt.slice(0, 10)}</span>
+                    </PublishedAtWrap>
+                  </EctWrap>
+                  <AuthorWrap>
+                    <span>source : {`${data.source.name}`}</span>
+                  </AuthorWrap>
+                </CardRight>
+              </CardContainer>
+            </CardWrap>),
+          )}
+
         </HomeWrap>
       </Layout>
     </MaterialCore.ThemeProvider>
@@ -153,13 +205,22 @@ const CardRight = styled.div`
 `;
 
 const TitleWrap = styled.div`
+  display: flex;
+  justify-content: space-between;
   font-weight: bold;
   font-size: large;
-  cursor: pointer;
-  
-  &:hover{
-    color: blue;
-    text-decoration: underline;
+
+  span {
+    cursor: pointer;
+
+    &:hover {
+      color: blue;
+      text-decoration: underline;
+    }
+  }
+
+  i {
+    cursor: pointer;
   }
 `;
 
@@ -177,11 +238,10 @@ const ContentWrap = styled.div`
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
   }
-
-  //border: 1px solid black;
 `;
 
 const EctWrap = styled.div`
+  margin-bottom: 10px;
   display: flex;
   gap: 10px;
   font-size: small;
