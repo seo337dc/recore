@@ -5,9 +5,9 @@
   "description": "recore 과제",
   "main": "pages/index.tsx",
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "analyze": "ANALYZE=true yarn build",
     "lint": "next lint --fix"
   },
   "repository": {
