@@ -38,7 +38,7 @@ const Login = () => {
           </BodyContent>
           <BodyContent>
             <InputCotent>PW</InputCotent>
-            <input name='pw' value={inputText.pw} onChange={onHandleChangeInput} />
+            <input name='pw' type='password' value={inputText.pw} onChange={onHandleChangeInput} />
           </BodyContent>
           <ButtonWrap>
             <ButtonStyle onClick={onHandleSubmit}>로그인</ButtonStyle>
