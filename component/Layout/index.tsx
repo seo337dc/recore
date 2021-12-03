@@ -1,60 +1,69 @@
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Cookies } from 'react-cookie';
+import React from 'react';
+import {useDispatch, useSelector} from 'react-redux';
+import {Cookies} from 'react-cookie';
 import styled from 'styled-components';
 import Login from '../Login/Login';
 import BookMark from '../BookMark/BookMark';
-import { RootState } from '../../store/reducer';
-import { insertInfo } from '../../store/actions/info';
+import {RootState} from '../../store/reducer';
+import {insertInfo} from '../../store/actions/info';
 
 
 interface Props {
-  children: React.ReactNode;
-  onClick: Function;
+    children: React.ReactNode;
+    onClick: Function;
+    onHandleInput: Function;
+    setIsSortDate: Function;
+    search: string;
+    isSortDate: boolean;
 }
 
-const Layout = ({ children, onClick }: Props) => {
-  const [search, setSearch] = useState('');
-  const cookies = new Cookies();
+const Layout = ({children, onClick, onHandleInput, search, setIsSortDate, isSortDate}: Props) => {
+    const cookies = new Cookies();
+    const dispatch = useDispatch();
+    const {token} = useSelector((state: RootState) => state.infoReducer);
 
-  const dispatch = useDispatch();
-  const { token } = useSelector((state: RootState) => state.infoReducer);
 
-  const onHandleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-  };
+    const onHandleClickLogout = () => {
+        cookies.set('token', '');
+        dispatch(insertInfo(''));
+    };
 
-  const onHandleClickLogout = () => {
-    cookies.set('token', '');
-    dispatch(insertInfo(''));
-  };
+    const onHandleChangeSort = () => {
+        setIsSortDate(!isSortDate);
+    };
 
-  return (
-    <>
-      <Nav>
-        <NavContent />
-        <NavContent>
-          <input value={search} onChange={onHandleInput} />
-          <i className='bx bx-search' onClick={() => onClick(search)} />
-        </NavContent>
-        <NavContent>
-          {token && <i className='bx bx-log-out' onClick={onHandleClickLogout} />}
-        </NavContent>
-      </Nav>
-      <Wrap>
-        <Container>
-          <ArticleWrap>
-            {children}
-          </ArticleWrap>
-          <LeftNavWrap>
-            {token ? <BookMark /> : <Login />}
-          </LeftNavWrap>
-        </Container>
 
-      </Wrap>
-    </>
+    return (
+        <>
+            <Nav>
+                <NavContent/>
+                <NavContent>
+                    <input value={search} onChange={(e) => onHandleInput(e)}/>
+                    <i className='bx bx-search' onClick={() => onClick(search, isSortDate)}/>
+                    <SortWrap>
+                        <i className='bx bx-sort'/>
+                        <SortButton onClick={onHandleChangeSort} isData={isSortDate}>Date</SortButton>
+                        <SortButton onClick={onHandleChangeSort} isData={!isSortDate}>Source</SortButton>
+                    </SortWrap>
+                </NavContent>
+                <NavContent>
+                    {token && <i className='bx bx-log-out' onClick={onHandleClickLogout}/>}
+                </NavContent>
+            </Nav>
+            <Wrap>
+                <Container>
+                    <ArticleWrap>
+                        {children}
+                    </ArticleWrap>
+                    <LeftNavWrap>
+                        {token ? <BookMark/> : <Login/>}
+                    </LeftNavWrap>
+                </Container>
 
-  );
+            </Wrap>
+        </>
+
+    );
 };
 
 const Nav = styled.div`
@@ -96,6 +105,34 @@ const NavContent = styled.div`
     margin-right: 20px;
   }
 `;
+
+const SortWrap = styled.div`
+  width: 200px;
+  margin: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  i {
+    font-size: x-large;
+  }
+`;
+
+const SortButton = styled.div<{ isData: boolean }>`
+  width: 70px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: small;
+  font-weight: bold;
+  border-radius: 10px;
+  color: #fff;
+  background-color: ${(props) => props.isData ? '#a79fbd' : '#e9e7e6'};
+  cursor: pointer;
+`;
+
 
 const Wrap = styled.div`
   padding-top: 50px;

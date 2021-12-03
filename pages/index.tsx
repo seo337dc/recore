@@ -1,155 +1,285 @@
-import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { Cookies } from 'react-cookie';
+import {useState, useEffect} from 'react';
+import {useSelector, useDispatch} from 'react-redux';
+import {Cookies} from 'react-cookie';
+import {useInView} from 'react-intersection-observer';
 import axios from 'axios';
 import styled from 'styled-components';
 import * as MaterialCore from '@material-ui/core';
 import Layout from '../component/Layout';
-import { RootState } from '../store/reducer';
-import { insertInfo, updateBookMark } from '../store/actions/info';
-import { updateArticle } from '../store/actions/article';
+import {RootState} from '../store/reducer';
+import {insertInfo, updateBookMark} from '../store/actions/info';
+import {updateArticle} from '../store/actions/article';
 
 interface articleInfo {
-  author: string;
-  content: string;
-  description: string;
-  publishedAt: string;
-  source: { id: null, name: string };
-  title: string;
-  url: string;
-  urlToImage: string;
-  isBookmark?: boolean;
+    author: string;
+    content: string;
+    description: string;
+    publishedAt: string;
+    source: { id: null; name: string };
+    title: string;
+    url: string;
+    urlToImage: string;
+    isBookmark?: boolean;
 }
 
 const Home = () => {
-  const materialUITheme = MaterialCore.unstable_createMuiStrictModeTheme();
-  const cookies = new Cookies();
-  const dispatch = useDispatch();
+    const materialUITheme = MaterialCore.unstable_createMuiStrictModeTheme();
+    const cookies = new Cookies();
+    const dispatch = useDispatch();
 
-  const { token } = useSelector((state: RootState) => state.infoReducer);
-  const { bookmark } = useSelector((state: RootState) => state.bookmarkReducer);
-  const articles = useSelector((state: RootState) => state.articlesReducer);
+    const {token} = useSelector((state: RootState) => state.infoReducer);
+    const {bookmark} = useSelector((state: RootState) => state.bookmarkReducer);
+    const articles = useSelector((state: RootState) => state.articlesReducer);
 
-  const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSortDate, setIsSortDate] = useState(true);
+    const [page, setPage] = useState(1);
+    const [search, setSearch] = useState('');
 
-  const onClickSearch = async (search: string) => {
-    if (!search) {
-      alert('검색어를 입력하세요.');
-      return;
-    }
-    if (isLoading) return;
+    const [ref, inView] = useInView();
 
-    try {
-      setIsLoading(true);
-      const res = await axios.get(`https://newsapi.org/v2/everything?apiKey=f0314630b1d64516bc522a83c6c5b6c0&q=${search}`);
-      if (res.status === 200) {
-        dispatch(updateArticle(res.data.articles.map((articleInfo: articleInfo) => {
-          if (bookmark.find((data) => data.url === articleInfo.url)) {
-            return { ...articleInfo, isBookmark: true };
-          } else {
-            return { ...articleInfo, isBookmark: false };
-          }
-        })));
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const onHandleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearch(e.target.value);
+    };
 
-  const onClickBookMark = (info: articleInfo) => {
+    const onClickSearch = async (search: string) => {
+        if (!search) {
+            alert('검색어를 입력하세요.');
+            return;
+        }
+        if (isLoading) return;
 
-    const newArticleList = articles.map((articleInfo) => {
-      if (articleInfo.url === info.url) {
-        return { ...articleInfo, isBookmark: !articleInfo.isBookmark };
-      } else {
-        return { ...articleInfo };
-      }
-    });
+        try {
+            setIsLoading(true);
+            //const sortStr = isSortDate ? '&sortBy=publishedAt' : '';
+            const res = await axios.get(
+                `https://newsapi.org/v2/everything?apiKey=3df0778ab7324c82a6056226c1cb147e&q=${search}&page=1&pageSize=5`,
+            );
+            if (res.status === 200) {
+                dispatch(
+                    updateArticle(
+                        res.data.articles.map((articleInfo: articleInfo) => {
+                            if (bookmark.find((data) => data.url === articleInfo.url)) {
+                                return {...articleInfo, isBookmark: true};
+                            } else {
+                                return {...articleInfo, isBookmark: false};
+                            }
+                        }),
+                    ),
+                );
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
+    const onHandleChangeSort = () => {
+        setIsSortDate(!isSortDate);
+    };
 
-    if (info.isBookmark) {
-      const reduxBookMarkList = newArticleList.filter((data) => data.isBookmark).map((data) => ({
-        title: data.title,
-        url: data.url,
-        urlToImage: data.urlToImage,
-      }));
-      dispatch(updateBookMark(reduxBookMarkList));
-      cookies.set('bookmark', reduxBookMarkList);
-    } else {
-      const newObj = { title: info.title, url: info.url, urlToImage: info.urlToImage };
-      dispatch(updateBookMark(bookmark.concat(newObj)));
-      cookies.set('bookmark', bookmark.concat(newObj));
-    }
+    const onClickBookMark = (info: articleInfo) => {
+        const newArticleList = articles.map((articleInfo) => {
+            if (articleInfo.url === info.url) {
+                return {...articleInfo, isBookmark: !articleInfo.isBookmark};
+            } else {
+                return {...articleInfo};
+            }
+        });
 
-    dispatch(updateArticle(newArticleList));
-  };
+        if (info.isBookmark) {
+            const reduxBookMarkList = newArticleList
+                .filter((data) => data.isBookmark)
+                .map((data) => ({
+                    title: data.title,
+                    url: data.url,
+                    urlToImage: data.urlToImage,
+                }));
+            dispatch(updateBookMark(reduxBookMarkList));
+            cookies.set('bookmark', reduxBookMarkList);
+        } else {
+            const newObj = {title: info.title, url: info.url, urlToImage: info.urlToImage};
+            dispatch(updateBookMark(bookmark.concat(newObj)));
+            cookies.set('bookmark', bookmark.concat(newObj));
+        }
 
-  const imgCheckFunc = (urlToImage: string): string => {
-    if (!urlToImage || urlToImage.indexOf('.html') > -1) {
-      return '/images/no-image.svg';
-    } else {
-      return urlToImage;
-    }
-  };
+        dispatch(updateArticle(newArticleList));
+    };
 
-  useEffect(() => {
-    const token = cookies.get('token') || '';
-    const bookMarkList = cookies.get('bookmark');
-    if (bookMarkList) dispatch(updateBookMark(bookMarkList));
-    dispatch(insertInfo(token));
-  }, [cookies.get('token')]);
+    const imgCheckFunc = (urlToImage: string): string => {
+        if (!urlToImage || urlToImage.indexOf('.html') > -1) {
+            return '/images/no-image.svg';
+        } else {
+            return urlToImage;
+        }
+    };
 
-  return (
-    <MaterialCore.ThemeProvider theme={materialUITheme}>
-      <Layout onClick={onClickSearch}>
-        <HomeWrap>
-          {isLoading && (
-            <LoadingWrap>
-              <MaterialCore.CircularProgress />
-            </LoadingWrap>
-          )}
-          {!articles.length && <NoneDataWrap>No Data</NoneDataWrap>}
-          {articles.length &&
-          articles.map((data, index) => (
-            <CardWrap key={`articleInfo_${index}`}>
-              <CardContainer>
-                <CardLeft>
-                  <img src={imgCheckFunc(data.urlToImage)} alt={data.url} />
-                </CardLeft>
-                <CardRight>
-                  <TitleWrap>
-                    <span>{data.title}</span>
-                    {token && <i className={`bx ${!data.isBookmark ? 'bx' : 'bxs'}-bookmark`}
-                                 onClick={() => onClickBookMark(data)} />}
-                  </TitleWrap>
-                  <ContentWrap><p>{data.description}</p></ContentWrap>
-                  <EctWrap>
-                    {data.author && (
-                      <AuthorWrap>
-                        <i className='bx bx-user' />
-                        <span>{data.author}</span>
-                      </AuthorWrap>
+    const scrollGetDataFunc = async (changePage: number) => {
+        if (isLoading) return;
+        if (search === '') return;
+        try {
+            setIsLoading(true);
+            // const sortStr = isSortDate ? '&sortBy=publishedAt' : '';
+            const res = await axios.get(
+                `https://newsapi.org/v2/everything?apiKey=3df0778ab7324c82a6056226c1cb147e&q=${search}&page=${changePage}&pageSize=5`,
+            );
+            if (res.status === 200) {
+                dispatch(
+                    updateArticle(
+                        articles.concat(
+                            res.data.articles.map((articleInfo: articleInfo) => {
+                                if (bookmark.find((data) => data.url === articleInfo.url)) {
+                                    return {...articleInfo, isBookmark: true};
+                                } else {
+                                    return {...articleInfo, isBookmark: false};
+                                }
+                            }),
+                        ),
+                    ),
+                );
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        const token = cookies.get('token') || '';
+        const bookMarkList = cookies.get('bookmark');
+        if (bookMarkList) dispatch(updateBookMark(bookMarkList));
+        dispatch(insertInfo(token));
+    }, [cookies.get('token')]);
+
+    useEffect(() => {
+        if (inView && !isLoading) {
+            setPage((prevState) => prevState + 1);
+            scrollGetDataFunc(page + 1);
+        }
+    }, [inView, isLoading]);
+
+    return (
+        <MaterialCore.ThemeProvider theme={materialUITheme}>
+            <Layout
+                onClick={onClickSearch}
+                onHandleInput={onHandleInput}
+                setIsSortDate={setIsSortDate}
+                search={search}
+                isSortDate={isSortDate}
+            >
+                <HomeWrap>
+                    {isLoading && (
+                        <LoadingWrap>
+                            <MaterialCore.CircularProgress/>
+                        </LoadingWrap>
                     )}
-                    {data.author && <span>|</span>}
-                    <PublishedAtWrap>
-                      <i className='bx bx-time' />
-                      <span>{data.publishedAt.slice(0, 10)}</span>
-                    </PublishedAtWrap>
-                  </EctWrap>
-                  <AuthorWrap>
-                    <span>source : {`${data.source.name}`}</span>
-                  </AuthorWrap>
-                </CardRight>
-              </CardContainer>
-            </CardWrap>),
-          )}
 
-        </HomeWrap>
-      </Layout>
-    </MaterialCore.ThemeProvider>
-  );
+                    {!articles.length && <NoneDataWrap>No Data</NoneDataWrap>}
+                    {articles.length && (
+                        <SortWrap>
+                            <i className="bx bx-sort"/>
+                            <SortButton onClick={onHandleChangeSort} isData={isSortDate}>
+                                Date
+                            </SortButton>
+                            <SortButton onClick={onHandleChangeSort} isData={!isSortDate}>
+                                Source
+                            </SortButton>
+                        </SortWrap>
+                    )}
+                    {articles.length &&
+                    articles.map((data, index) => {
+                        if (articles.length - 1 === index) {
+                            return (
+                                <CardWrap key={`articleInfo_${index}`} ref={ref}>
+                                    <CardContainer>
+                                        <CardLeft>
+                                            <img src={imgCheckFunc(data.urlToImage)} alt={data.url}/>
+                                        </CardLeft>
+                                        <CardRight>
+                                            <TitleWrap>
+                                                <a href={data.url} rel="noreferrer noopener" target="_blank">
+                                                    {data.title}
+                                                </a>
+                                                {token && (
+                                                    <i
+                                                        className={`bx ${!data.isBookmark ? 'bx' : 'bxs'}-bookmark`}
+                                                        onClick={() => onClickBookMark(data)}
+                                                    />
+                                                )}
+                                            </TitleWrap>
+                                            <ContentWrap>
+                                                <p>{data.description}</p>
+                                            </ContentWrap>
+                                            <EctWrap>
+                                                {data.author && (
+                                                    <AuthorWrap>
+                                                        <i className="bx bx-user"/>
+                                                        <span>{data.author}</span>
+                                                    </AuthorWrap>
+                                                )}
+                                                {data.author && <span>|</span>}
+                                                <PublishedAtWrap>
+                                                    <i className="bx bx-time"/>
+                                                    <span>{data.publishedAt.slice(0, 10)}</span>
+                                                </PublishedAtWrap>
+                                            </EctWrap>
+                                            <AuthorWrap>
+                                                <span>source : {`${data.source.name}`}</span>
+                                            </AuthorWrap>
+                                        </CardRight>
+                                    </CardContainer>
+                                </CardWrap>
+                            );
+                        } else {
+                            return (
+                                <CardWrap key={`articleInfo_${index}`}>
+                                    <CardContainer>
+                                        <CardLeft>
+                                            <img src={imgCheckFunc(data.urlToImage)} alt={data.url}/>
+                                        </CardLeft>
+                                        <CardRight>
+                                            <TitleWrap>
+                                                <a href={data.url} rel="noreferrer noopener" target="_blank">
+                                                    {data.title}
+                                                </a>
+                                                {token && (
+                                                    <i
+                                                        className={`bx ${!data.isBookmark ? 'bx' : 'bxs'}-bookmark`}
+                                                        onClick={() => onClickBookMark(data)}
+                                                    />
+                                                )}
+                                            </TitleWrap>
+                                            <ContentWrap>
+                                                <p>{data.description}</p>
+                                            </ContentWrap>
+                                            <EctWrap>
+                                                {data.author && (
+                                                    <AuthorWrap>
+                                                        <i className="bx bx-user"/>
+                                                        <span>{data.author}</span>
+                                                    </AuthorWrap>
+                                                )}
+                                                {data.author && <span>|</span>}
+                                                <PublishedAtWrap>
+                                                    <i className="bx bx-time"/>
+                                                    <span>{data.publishedAt.slice(0, 10)}</span>
+                                                </PublishedAtWrap>
+                                            </EctWrap>
+                                            <AuthorWrap>
+                                                <span>source : {`${data.source.name}`}</span>
+                                            </AuthorWrap>
+                                        </CardRight>
+                                    </CardContainer>
+                                </CardWrap>
+                            );
+                        }
+                    })}
+                </HomeWrap>
+            </Layout>
+        </MaterialCore.ThemeProvider>
+    );
 };
 
 const HomeWrap = styled.div`
@@ -173,6 +303,33 @@ const NoneDataWrap = styled.div`
   justify-content: center;
   font-size: xxx-large;
   color: #666;
+`;
+
+const SortWrap = styled.div`
+  width: 200px;
+  margin: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+
+  i {
+    font-size: x-large;
+  }
+`;
+
+const SortButton = styled.div<{ isData: boolean }>`
+  width: 70px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: small;
+  font-weight: bold;
+  border-radius: 10px;
+  color: #fff;
+  background-color: ${(props) => (props.isData ? '#000' : '#e9e7e6')};
 `;
 
 const CardWrap = styled(MaterialCore.Card)`
@@ -201,7 +358,7 @@ const CardRight = styled.div`
   padding: 5px 10px;
   width: calc(100% - 200px);
   height: 120px;
-  //border: 1px solid black;
+  //border: 1px solid #000;
 `;
 
 const TitleWrap = styled.div`
@@ -210,7 +367,7 @@ const TitleWrap = styled.div`
   font-weight: bold;
   font-size: large;
 
-  span {
+  a {
     cursor: pointer;
 
     &:hover {
