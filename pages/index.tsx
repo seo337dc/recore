@@ -51,7 +51,6 @@ const Home = () => {
 
     try {
       setIsLoading(true);
-      //const sortStr = isSortDate ? '&sortBy=publishedAt' : '';
       const res = await axios.get(
         `https://newsapi.org/v2/everything?apiKey=3df0778ab7324c82a6056226c1cb147e&q=${search}&page=1&pageSize=5`,
       );
@@ -73,10 +72,6 @@ const Home = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const onHandleChangeSort = () => {
-    setIsSortDate(!isSortDate);
   };
 
   const onClickBookMark = (info: articleInfo) => {
@@ -120,7 +115,6 @@ const Home = () => {
     if (search === '') return;
     try {
       setIsLoading(true);
-      // const sortStr = isSortDate ? '&sortBy=publishedAt' : '';
       const res = await axios.get(
         `https://newsapi.org/v2/everything?apiKey=3df0778ab7324c82a6056226c1cb147e&q=${search}&page=${changePage}&pageSize=5`,
       );
@@ -177,17 +171,6 @@ const Home = () => {
           )}
 
           {!articles.length && <NoneDataWrap>No Data</NoneDataWrap>}
-          {articles.length && (
-            <SortWrap>
-              <i className='bx bx-sort' />
-              <SortButton onClick={onHandleChangeSort} isData={isSortDate}>
-                Date
-              </SortButton>
-              <SortButton onClick={onHandleChangeSort} isData={!isSortDate}>
-                Source
-              </SortButton>
-            </SortWrap>
-          )}
           {articles.length &&
           articles.map((data, index) => {
             if (articles.length - 1 === index) {
@@ -303,33 +286,6 @@ const NoneDataWrap = styled.div`
   justify-content: center;
   font-size: xxx-large;
   color: #666;
-`;
-
-const SortWrap = styled.div`
-  width: 200px;
-  margin: 10px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  cursor: pointer;
-
-  i {
-    font-size: x-large;
-  }
-`;
-
-const SortButton = styled.div<{ isData: boolean }>`
-  width: 70px;
-  height: 25px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: small;
-  font-weight: bold;
-  border-radius: 10px;
-  color: #fff;
-  background-color: ${(props) => (props.isData ? '#000' : '#e9e7e6')};
 `;
 
 const CardWrap = styled(MaterialCore.Card)`

@@ -17,7 +17,7 @@ interface Props {
   isSortDate: boolean;
 }
 
-const Layout = ({ children, onClick, onHandleInput, search, setIsSortDate, isSortDate }: Props) => {
+const Layout = ({ children, onClick, onHandleInput, search, isSortDate }: Props) => {
   const cookies = new Cookies();
   const dispatch = useDispatch();
   const { token } = useSelector((state: RootState) => state.infoReducer);
@@ -28,11 +28,6 @@ const Layout = ({ children, onClick, onHandleInput, search, setIsSortDate, isSor
     dispatch(insertInfo(''));
   };
 
-  const onHandleChangeSort = () => {
-    setIsSortDate(!isSortDate);
-  };
-
-
   return (
     <>
       <Nav>
@@ -40,11 +35,6 @@ const Layout = ({ children, onClick, onHandleInput, search, setIsSortDate, isSor
         <NavContent>
           <input value={search} onChange={(e) => onHandleInput(e)} />
           <i className='bx bx-search' onClick={() => onClick(search, isSortDate)} />
-          <SortWrap>
-            <i className='bx bx-sort' />
-            <SortButton onClick={onHandleChangeSort} isData={isSortDate}>Date</SortButton>
-            <SortButton onClick={onHandleChangeSort} isData={!isSortDate}>Source</SortButton>
-          </SortWrap>
         </NavContent>
         <NavContent>
           {token && <i className='bx bx-log-out' onClick={onHandleClickLogout} />}
@@ -105,34 +95,6 @@ const NavContent = styled.div`
     margin-right: 20px;
   }
 `;
-
-const SortWrap = styled.div`
-  width: 200px;
-  margin: 10px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-
-  i {
-    font-size: x-large;
-  }
-`;
-
-const SortButton = styled.div<{ isData: boolean }>`
-  width: 70px;
-  height: 25px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: small;
-  font-weight: bold;
-  border-radius: 10px;
-  color: #fff;
-  background-color: ${(props) => props.isData ? '#a79fbd' : '#e9e7e6'};
-  cursor: pointer;
-`;
-
 
 const Wrap = styled.div`
   padding-top: 50px;
