@@ -21,7 +21,7 @@ const Login = () => {
       return;
     }
 
-    cookies.set( 'token', inputText.id);
+    cookies.set('token', inputText.id);
     dispatch(insertInfo(inputText.id));
   };
 

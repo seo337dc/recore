@@ -1,69 +1,69 @@
 import React from 'react';
-import {useDispatch, useSelector} from 'react-redux';
-import {Cookies} from 'react-cookie';
+import { useDispatch, useSelector } from 'react-redux';
+import { Cookies } from 'react-cookie';
 import styled from 'styled-components';
 import Login from '../Login/Login';
 import BookMark from '../BookMark/BookMark';
-import {RootState} from '../../store/reducer';
-import {insertInfo} from '../../store/actions/info';
+import { RootState } from '../../store/reducer';
+import { insertInfo } from '../../store/actions/info';
 
 
 interface Props {
-    children: React.ReactNode;
-    onClick: Function;
-    onHandleInput: Function;
-    setIsSortDate: Function;
-    search: string;
-    isSortDate: boolean;
+  children: React.ReactNode;
+  onClick: Function;
+  onHandleInput: Function;
+  setIsSortDate: Function;
+  search: string;
+  isSortDate: boolean;
 }
 
-const Layout = ({children, onClick, onHandleInput, search, setIsSortDate, isSortDate}: Props) => {
-    const cookies = new Cookies();
-    const dispatch = useDispatch();
-    const {token} = useSelector((state: RootState) => state.infoReducer);
+const Layout = ({ children, onClick, onHandleInput, search, setIsSortDate, isSortDate }: Props) => {
+  const cookies = new Cookies();
+  const dispatch = useDispatch();
+  const { token } = useSelector((state: RootState) => state.infoReducer);
 
 
-    const onHandleClickLogout = () => {
-        cookies.set('token', '');
-        dispatch(insertInfo(''));
-    };
+  const onHandleClickLogout = () => {
+    cookies.set('token', '');
+    dispatch(insertInfo(''));
+  };
 
-    const onHandleChangeSort = () => {
-        setIsSortDate(!isSortDate);
-    };
+  const onHandleChangeSort = () => {
+    setIsSortDate(!isSortDate);
+  };
 
 
-    return (
-        <>
-            <Nav>
-                <NavContent/>
-                <NavContent>
-                    <input value={search} onChange={(e) => onHandleInput(e)}/>
-                    <i className='bx bx-search' onClick={() => onClick(search, isSortDate)}/>
-                    <SortWrap>
-                        <i className='bx bx-sort'/>
-                        <SortButton onClick={onHandleChangeSort} isData={isSortDate}>Date</SortButton>
-                        <SortButton onClick={onHandleChangeSort} isData={!isSortDate}>Source</SortButton>
-                    </SortWrap>
-                </NavContent>
-                <NavContent>
-                    {token && <i className='bx bx-log-out' onClick={onHandleClickLogout}/>}
-                </NavContent>
-            </Nav>
-            <Wrap>
-                <Container>
-                    <ArticleWrap>
-                        {children}
-                    </ArticleWrap>
-                    <LeftNavWrap>
-                        {token ? <BookMark/> : <Login/>}
-                    </LeftNavWrap>
-                </Container>
+  return (
+    <>
+      <Nav>
+        <NavContent />
+        <NavContent>
+          <input value={search} onChange={(e) => onHandleInput(e)} />
+          <i className='bx bx-search' onClick={() => onClick(search, isSortDate)} />
+          <SortWrap>
+            <i className='bx bx-sort' />
+            <SortButton onClick={onHandleChangeSort} isData={isSortDate}>Date</SortButton>
+            <SortButton onClick={onHandleChangeSort} isData={!isSortDate}>Source</SortButton>
+          </SortWrap>
+        </NavContent>
+        <NavContent>
+          {token && <i className='bx bx-log-out' onClick={onHandleClickLogout} />}
+        </NavContent>
+      </Nav>
+      <Wrap>
+        <Container>
+          <ArticleWrap>
+            {children}
+          </ArticleWrap>
+          <LeftNavWrap>
+            {token ? <BookMark /> : <Login />}
+          </LeftNavWrap>
+        </Container>
 
-            </Wrap>
-        </>
+      </Wrap>
+    </>
 
-    );
+  );
 };
 
 const Nav = styled.div`

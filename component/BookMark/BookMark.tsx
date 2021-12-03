@@ -19,7 +19,7 @@ const BookMark = () => {
 
   const onHandleDelete = (bookmarkData: Bookmark) => {
     dispatch(updateBookMark(bookmark.filter((data) => data.url !== bookmarkData.url)));
-    cookies.set('bookmark',bookmark.filter((data) => data.url !== bookmarkData.url));
+    cookies.set('bookmark', bookmark.filter((data) => data.url !== bookmarkData.url));
     dispatch(updateArticle(articleList.map((data) => {
       if (data.url === bookmarkData.url) {
         return { ...data, isBookmark: false };
@@ -35,16 +35,16 @@ const BookMark = () => {
       <HeadWrap>BookMark</HeadWrap>
       <BodyWrap>
         <CardWrap>
-          {bookmark.slice(0).reverse().map((data,index) =>
+          {bookmark.slice(0).reverse().map((data, index) =>
             (<CardContainer key={`bookmark_${index}`}>
-                <CardTop>
-                  <i className='bx bx-x-circle' onClick={() => onHandleDelete(data)} />
-                </CardTop>
-                <CardBody>
-                  <img src={data.urlToImage} alt={data.title}/>
-                  <p>{data.title}</p>
-                </CardBody>
-              </CardContainer>),
+              <CardTop>
+                <i className='bx bx-x-circle' onClick={() => onHandleDelete(data)} />
+              </CardTop>
+              <CardBody>
+                <img src={data.urlToImage} alt={data.title} />
+                <p>{data.title}</p>
+              </CardBody>
+            </CardContainer>),
           )}
         </CardWrap>
       </BodyWrap>
