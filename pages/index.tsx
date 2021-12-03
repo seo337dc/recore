@@ -53,7 +53,7 @@ const Home = () => {
       setIsLoading(true);
       //const sortStr = isSortDate ? '&sortBy=publishedAt' : '';
       const res = await axios.get(
-        `https://newsapi.org/v2/everything?apiKey=f0314630b1d64516bc522a83c6c5b6c0&q=${search}&page=1&pageSize=5`,
+        `https://newsapi.org/v2/everything?apiKey=3df0778ab7324c82a6056226c1cb147e&q=${search}&page=1&pageSize=5`,
       );
       if (res.status === 200) {
         dispatch(
@@ -122,7 +122,7 @@ const Home = () => {
       setIsLoading(true);
       // const sortStr = isSortDate ? '&sortBy=publishedAt' : '';
       const res = await axios.get(
-        `https://newsapi.org/v2/everything?apiKey=f0314630b1d64516bc522a83c6c5b6c0&q=${search}&page=${changePage}&pageSize=5`,
+        `https://newsapi.org/v2/everything?apiKey=3df0778ab7324c82a6056226c1cb147e&q=${search}&page=${changePage}&pageSize=5`,
       );
       if (res.status === 200) {
         dispatch(
